@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
    socklen_t sin_size=sizeof(struct sockaddr_in);
    pthread_t tid;
 
-   openlog("monitord", LOG_CONS, LOG_DAEMON);
+   openlog("monitord", LOG_PID|LOG_CONS, LOG_DAEMON);
 
   if (argc >4) { 
       /* esto es para validar el numero de argumentos del programa */
@@ -97,75 +97,24 @@ int main(int argc, char *argv[])
 			daemonize();
 	  
 	 fd = Open_listenfd(puerto);
-   
 	   while(1) {
-	      //read_sysinfo();
+	      char buf[MAXBUF];	      
 	      fd2=Malloc(sizeof(int));
 	      /* A continuación la llamada a accept() */
-	      *fd2 = Accept(fd,(struct sockaddr *)&client,&sin_size);	      
+	      *fd2 = accept(fd,(struct sockaddr *)&client,&sin_size);	      
 
 	      if(cflag)
 	      	printf("[%s] Conexion establecida con %s\n",ctime_s(),inet_ntoa(client.sin_addr) );
 	      if(sflag)
 		syslog(LOG_NOTICE,"Conexion establecida con %s\n",inet_ntoa(client.sin_addr));
 	      if(lpflag || ldflag)
-		fprintf(filelog,"[%s\b] Conexion establecida con %s\n",ctime_s(),inet_ntoa(client.sin_addr) );
+		fprintf(filelog,"[%s] Conexion establecida con %s\n",ctime_s(),inet_ntoa(client.sin_addr) );
 	      /* que mostrará la IP del cliente */
 		
 		pthread_create(&tid, NULL, thread, fd2);
 
 	   }
 }
-
-
-/*void *thread(void *vargp)
-{
-	int fd2 = *((int *)vargp);
-	pthread_detach(pthread_self());
-	Free(vargp);
-	//hash(connfd);
-	char tmp[MAXBUF];
-	int flag=0;
-//recv(fd2,tmp,MAXBUF,0)==0 ||
-while( flag==0){
-	read_sysinfo();
-   	struct stat mi_stat;
-   	if (stat("info.txt", &mi_stat) < 0) {
-	if(cflag) 
-		fprintf(stderr, "Archivo no encontrado!\n");
-	if(sflag)
-		syslog(LOG_NOTICE,"Archivo no encontrado!\n");
-	if(lpflag || ldflag)
-		fprintf(filelog,"Archivo no encontrado!\n");
-	exit(-1);
-	}
-   	size_t size = mi_stat.st_size;
-   	char contenido[size];
-   	int file= Open("info.txt",O_RDONLY,0);
-   	rio_readn(file,contenido,size);
-   	close(file);
-	pid_t pid;
-	int status;
-	if((pid=fork())==0){
-		write(fd2,contenido,size);
-		//que enviará el mensaje al cliente
-		exit(0);
-		}
-	waitpid(pid,&status,0);
-      	if(status!=0){
-		flag=1;
-		if(cflag)
-	      		printf("Se desconecto un cliente\n");
-		if(sflag)
-			syslog(LOG_NOTICE,"Se desconecto un cliente\n");
-		if(lpflag || ldflag)
-			fprintf(filelog,"Se desconecto un cliente\n");
-	}
-	sleep(1);
-}
-	Close(fd2);
-	return NULL;
-}*/
 
 
 void *thread(void *vargp)
@@ -181,32 +130,29 @@ void *thread(void *vargp)
 void echo(int fd2)
 {
 
-	char tmp[MAXBUF];
-	int flag=0;
-
-while( flag==0){
-//Rio_writen(fd2,"hola",6);
-	read_sysinfo();
-   	struct stat mi_stat;
-   	if (stat("info.txt", &mi_stat) < 0) {
-	if(cflag) 
-		fprintf(stderr, "Archivo no encontrado!\n");
-	if(sflag)
-		syslog(LOG_NOTICE,"Archivo no encontrado!\n");
-	if(lpflag || ldflag)
-		fprintf(filelog,"Archivo no encontrado!\n");
-	exit(-1);
-	}
-   	size_t size = mi_stat.st_size;
-   	char contenido[size];
-   	int file= Open("info.txt",O_RDONLY,0);
-   	rio_readn(file,contenido,size);
-   	close(file);
+	void *buf0;
+	unsigned len,lon;
+	char tmp[2];
+	buf0=read_sysinfo(0,&len,&lon);
+	//printf("SERIE0: %d\n",len);
+	sprintf(tmp,"%d",len);
+	send(fd2,tmp,sizeof(short),0);
+	send(fd2,buf0,len,0);
+	//printf("len: %d\n",len); 
+	//printf("lon: %d\n",lon); 
+	
+int flag=0;
+while(flag==0){
+   	void *buf1;
+	buf1=read_sysinfo(1,&len,&lon);
+	sprintf(tmp,"%d",lon);
 	pid_t pid;
 	int status;
 	if((pid=fork())==0){
-		write(fd2,contenido,size);
+		write(fd2,tmp,sizeof(short));
+		write(fd2,buf1,lon);
 		//que enviará el mensaje al cliente
+		//printf("SERIE1: %d\n",lon);;
 		exit(0);
 		}
 	waitpid(pid,&status,0);

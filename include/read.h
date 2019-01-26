@@ -1,1 +1,1 @@
-int read_sysinfo(void);
+void *read_sysinfo(int flag,unsigned *len,unsigned *lon);
