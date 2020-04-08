@@ -1,46 +1,38 @@
-# Monitor remoto de rendimiento
+# Remote performance monitor
 
-Aplicación cliente-servidor para el monitoreo remoto del estado de una computadora.
+TCP Server-Client implementation in C
+Application for remote monitoring of the state of a computer.
 
-### Uso ###
+### Server: ###
 
+The server program maintains several client connections at the same time, and has the following use (which should be shown when using the -h option):
 
-SERVIDOR:
+**monitord** transmits the data on the use and performance of the server to all the connected clients.
 
-El programa servidor mantiene varias conexiones de clientes al mismo tiempo, y tiene el siguiente uso (el cual debe mostrarse al usar la opción -h):
+**Usage**
 
+```bash
+  monitord  [-c] [<port>]
+            [-l <log_file>] [<port>]
+            [-h]
+```
 
-./monitord –h
+**Options:**
 
-monitord transmite los datos de uso y rendimiento del servidor hacia todos los clientes que se enuentren conectados.
-
-
-Uso específico del servidor (código):
-
-
-  monitord [-c] [<port>]
-  
-  monitord [-l <log_file>] [<port>]
-  
-  monitord -h
-  
-
-Opciones:
-
-
+```bash
   -h             Help, show this screen.
-  
+
   -c             Console mode.
-  
+
   -l <log_file>  Log file to use [default: log.txt].
-  
-  
-Al establecer una conexión, el programa envía la siguiente información al cliente cada segundo:
+```
+
+When establishing a connection, the program sends the following information to the client every second:
 
 
 * Versión del sistema operativo
 * Uptime
-* Promedio carga en 1 minuto, 5 minutos y 15 minutos
+* Promedio carga en 1 min, 5 min y 15 min
 * Número de procesadores
 * Porcentaje de uso de cada procesador
 * Memoria total
@@ -49,32 +41,18 @@ Al establecer una conexión, el programa envía la siguiente información al cli
 * Número de procesos en ejecución
 
 
-CLIENTE:
+### Client: ###
 
-El programa cliente realiza lo siguiente:
-
-
-/monitorc –h
-
-monitorc (cliente) se conecta a un servicio remoto monitord (servidor) y muestra los datos de uso y rendimiento del servidor.
+**monitorc** connects to a remote monitor service (server) and displays server usage and performance information.
 
 
-Uso específico del cliente (código):
+**Usage**
+```bash
+  monitord  [<ip>] [<port>]
+            [-h]
+```
 
-
-  monitord [<ip>] [<port>]
-  
-  monitorc -h
- 
- 
-Opciones:
-
-
+**Options:**
+```bash
   -h             Help, show this screen.
-  
-
-
-### Integrantes ###
-
-* Ronny Martinez
-* Rommel Saquicela
+```
